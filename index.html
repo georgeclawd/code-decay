@@ -812,9 +812,9 @@
             life.
           </p>
           <form
+            id="waitlist-form"
             class="email-form"
-            action="https://formspree.io/f/YOUR_FORM_ID"
-            method="POST"
+            onsubmit="handleSubmit(event); return false;"
           >
             <input
               type="email"
@@ -834,5 +834,47 @@
         <p>2026 CodeDecay. Built for developers who care about code quality.</p>
       </div>
     </footer>
-  </body>
+  
+<script>
+  // Discord webhook URL - loaded from environment at deploy time
+  // DO NOT commit actual webhook URL to repo
+  const WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
+  
+  async function handleSubmit(event) {
+    event.preventDefault();
+    const form = event.target;
+    const email = form.email.value;
+    
+    if (!WEBHOOK_URL) {
+      console.error('Webhook not configured');
+      alert('Signup temporarily unavailable.');
+      return;
+    }
+    
+    const data = {
+      embeds: [{
+        title: "🎉 New CodeDecay Signup!",
+        description: `Email: ${email}`,
+        color: 0x8b5cf6,
+        timestamp: new Date().toISOString(),
+        footer: { text: "CodeDecay Waitlist" }
+      }]
+    };
+    
+    try {
+      await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      
+      gtag_report_conversion();
+      form.innerHTML = '<p style="color: #22c55e; font-weight: 600;">✅ Thanks! We\'ll be in touch with your access link soon.</p>';
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Something went wrong. Please try again.');
+    }
+  }
+</script>
+</body>
 </html>
